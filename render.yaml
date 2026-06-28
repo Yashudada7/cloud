@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: sewa-social-welfare
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: MONGODB_URI
+        sync: false
+        placeholder: "Paste your mongodb+srv://... connection string here"
+      - key: FIREBASE_PROJECT_ID
+        value: ai-studio-applet-webapp-1e896
+      - key: GEMINI_API_KEY
+        sync: false
+        placeholder: "Paste your Google Gemini API Key here (Required for AI features)"
+      - key: VITE_PAYPAL_CLIENT_ID
+        sync: false
+        placeholder: "Optional: Paste your PayPal Client ID for donations"

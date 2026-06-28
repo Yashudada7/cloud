@@ -1,0 +1,170 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isAdmin() {
+      // For MVP, we can check if the user's role array contains 'admin'
+      // Note: In real production, this should be verified via a separate trusted collection
+      // but the instructions say never trust client-side claims. 
+      // So we check if a document exists in an /admins/ collection.
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // --- Collection: Users ---
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && 
+                      incoming().diff(existing()).affectedKeys().hasOnly(['name', 'displayName', 'bio', 'bloodGroup', 'location', 'fcmToken', 'updatedAt']);
+
+      match /donations/{donationId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && incoming().donationId == donationId;
+      }
+      match /volunteering/{recordId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && incoming().recordId == recordId;
+      }
+      match /enrollments/{enrollmentId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create, update: if isOwner(userId) && incoming().enrollmentId == enrollmentId;
+      }
+      match /monetaryDonations/{donationId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && incoming().donationId == donationId;
+      }
+    }
+
+    // Donation Drives
+    match /donationDrives/{driveId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidDonationDrive(incoming());
+      allow update: if isSignedIn() && (isDriveCreator(existing()) || isAdmin()) &&
+                      incoming().diff(existing()).affectedKeys().hasOnly(['currentAmount', 'status', 'description', 'title', 'supporterCount']);
+      
+      match /donations/{donationId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && incoming().donationId == donationId;
+      }
+    }
+
+    match /donationDrives {
+      allow list: if true;
+    }
+
+    function isDriveCreator(data) {
+      return data.createdBy == request.auth.uid;
+    }
+
+    function isValidDonationDrive(data) {
+      return data.title is string && data.title.size() <= 100 &&
+             data.targetAmount is number && data.targetAmount > 0 &&
+             data.createdBy == request.auth.uid;
+    }
+
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() <= 128 &&
+             (data.name is string || !data.keys().contains('name')) &&
+             (data.displayName is string || !data.keys().contains('displayName')) &&
+             data.email is string && data.email.size() <= 100 &&
+             data.roles is list && data.roles.size() >= 1;
+    }
+
+    // --- Collection: NGOs ---
+    match /ngos/{ngoId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidNGO(incoming());
+      allow update: if isSignedIn() && (isNGOOwner(existing()) || isAdmin()) && 
+                      incoming().diff(existing()).affectedKeys().hasOnly(['description', 'contactEmail', 'name', 'verified']);
+    }
+
+    function isValidNGO(data) {
+      return data.ngoId is string && data.name is string && data.ownerId == request.auth.uid;
+    }
+
+    function isNGOOwner(ngoData) {
+      return ngoData.ownerId == request.auth.uid;
+    }
+
+    // --- Collection: Civic Reports ---
+    match /civicReports/{reportId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidCivicReport(incoming());
+      allow update: if isSignedIn() && (isAdmin() || isGovtUser()) &&
+                      incoming().diff(existing()).affectedKeys().hasOnly(['status', 'govtNotes', 'history']);
+    }
+
+    function isValidCivicReport(data) {
+      return data.userId == request.auth.uid && 
+             data.photoUrl is string && 
+             data.category is string;
+    }
+    
+    function isGovtUser() {
+      return exists(/databases/$(database)/documents/govt_users/$(request.auth.uid));
+    }
+
+    // --- Collection: Blood Requests ---
+    match /bloodRequests/{requestId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidBloodRequest(incoming());
+      allow update: if isSignedIn() && (incoming().diff(existing()).affectedKeys().hasOnly(['status']));
+    }
+
+    function isValidBloodRequest(data) {
+      return data.requestId is string && data.bloodGroup is string;
+    }
+
+    // --- Collection: Animal Cases ---
+    match /animalCases/{caseId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidAnimalCase(incoming());
+      allow update: if isSignedIn() && (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'rescuedBy']));
+    }
+
+    function isValidAnimalCase(data) {
+      return data.reportedBy == request.auth.uid && data.animalType is string;
+    }
+
+    // --- Collection: Courses ---
+    match /courses/{courseId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidCourse(incoming());
+      allow update: if isSignedIn() && (existing().educatorId == request.auth.uid || isAdmin());
+    }
+
+    match /courses {
+      allow list: if true;
+    }
+
+    function isValidCourse(data) {
+      return data.title is string && data.educatorId == request.auth.uid;
+    }
+  }
+}

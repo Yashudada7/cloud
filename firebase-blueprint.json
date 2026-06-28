@@ -1,0 +1,187 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents a user or volunteer on the platform.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "bloodGroup": { "type": "string", "enum": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] },
+        "roles": { "type": "array", "items": { "type": "string" } },
+        "location": { "type": "object", "properties": { "lat": { "type": "number" }, "lng": { "type": "number" }, "geohash": { "type": "string" } } },
+        "fcmToken": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "email", "roles"]
+    },
+    "NGO": {
+      "title": "NGO",
+      "description": "Non-Governmental Organization profile.",
+      "type": "object",
+      "properties": {
+        "ngoId": { "type": "string" },
+        "name": { "type": "string" },
+        "verified": { "type": "boolean" },
+        "description": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ngoId", "name", "ownerId"]
+    },
+    "CivicReport": {
+      "title": "Civic Report",
+      "description": "A report of a civic issue like potholes or litter.",
+      "type": "object",
+      "properties": {
+        "reportId": { "type": "string" },
+        "userId": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "location": { "type": "object", "properties": { "lat": { "type": "number" }, "lng": { "type": "number" } } },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["SUBMITTED", "VERIFIED", "ASSIGNED", "IN_PROGRESS", "RESOLVED"] },
+        "govtNotes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "BloodRequest": {
+      "title": "Blood Request",
+      "description": "Emergency blood request from a hospital or NGO.",
+      "type": "object",
+      "properties": {
+        "requestId": { "type": "string" },
+        "hospitalId": { "type": "string" },
+        "bloodGroup": { "type": "string" },
+        "units": { "type": "number" },
+        "urgency": { "type": "string", "enum": ["NORMAL", "URGENT", "CRITICAL"] },
+        "location": { "type": "object", "properties": { "lat": { "type": "number" }, "lng": { "type": "number" }, "geohash": { "type": "string" } } },
+        "status": { "type": "string", "enum": ["OPEN", "FULFILLED", "EXPIRED"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "AnimalCase": {
+      "title": "Animal Case",
+      "description": "Reporting an animal in need of rescue or available for adoption.",
+      "type": "object",
+      "properties": {
+        "caseId": { "type": "string" },
+        "reportedBy": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "animalType": { "type": "string" },
+        "description": { "type": "string" },
+        "location": { "type": "object", "properties": { "lat": { "type": "number" }, "lng": { "type": "number" } } },
+        "status": { "type": "string", "enum": ["OPEN", "RESCUED", "ADOPTED"] },
+        "rescuedBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Educational course provided by an educator or NGO.",
+      "type": "object",
+      "properties": {
+        "courseId": { "type": "string" },
+        "title": { "type": "string" },
+        "educatorId": { "type": "string" },
+        "description": { "type": "string" },
+        "thumbnailUrl": { "type": "string" },
+        "modules": { "type": "array", "items": { "type": "object" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Enrollment": {
+      "title": "Enrollment",
+      "description": "Tracks a user's progress in a course.",
+      "type": "object",
+      "properties": {
+        "enrollmentId": { "type": "string" },
+        "userId": { "type": "string" },
+        "courseId": { "type": "string" },
+        "courseTitle": { "type": "string" },
+        "progress": { "type": "number" },
+        "completedModules": { "type": "number" },
+        "totalModules": { "type": "number" },
+        "category": { "type": "string" },
+        "lastAccessed": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["ENROLLED", "COMPLETED"] }
+      }
+    },
+    "DonationRecord": {
+      "title": "Donation Record",
+      "description": "Record of a donation (blood, funds, etc).",
+      "type": "object",
+      "properties": {
+        "donationId": { "type": "string" },
+        "type": { "type": "string" },
+        "value": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "status": { "type": "string" }
+      }
+    },
+    "VolunteeringRecord": {
+      "title": "Volunteering Record",
+      "description": "Record of a volunteering activity.",
+      "type": "object",
+      "properties": {
+        "recordId": { "type": "string" },
+        "activity": { "type": "string" },
+        "role": { "type": "string" },
+        "hours": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "status": { "type": "string" }
+      }
+    },
+    "DonationDrive": {
+      "title": "Donation Drive",
+      "description": "A monetary fundraising campaign.",
+      "type": "object",
+      "properties": {
+        "driveId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "targetAmount": { "type": "number" },
+        "currentAmount": { "type": "number" },
+        "createdBy": { "type": "string" },
+        "creatorName": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "category": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["ACTIVE", "COMPLETED", "PAUSED"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "MonetaryDonation": {
+      "title": "Monetary Donation",
+      "description": "A specific financial contribution to a drive.",
+      "type": "object",
+      "properties": {
+        "donationId": { "type": "string" },
+        "driveId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "amount": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "paymentMethod": { "type": "string" },
+        "status": { "type": "string", "enum": ["SUCCESS", "PENDING", "FAILED"] }
+      }
+    }
+  },
+  "firestore": {
+    "users": { "schema": "User", "description": "User profiles and volunteer data." },
+    "users/{userId}/donations": { "schema": "DonationRecord", "description": "User's donation history." },
+    "users/{userId}/monetaryDonations": { "schema": "MonetaryDonation", "description": "User's financial contribution history." },
+    "users/{userId}/volunteering": { "schema": "VolunteeringRecord", "description": "User's volunteering history." },
+    "users/{userId}/enrollments": { "schema": "Enrollment", "description": "Courses the user is enrolled in." },
+    "donationDrives": { "schema": "DonationDrive", "description": "Active fundraising campaigns." },
+    "donationDrives/{driveId}/donations": { "schema": "MonetaryDonation", "description": "Donations received for a specific drive." },
+    "ngos": { "schema": "NGO", "description": "NGO profiles." },
+    "civicReports": { "schema": "CivicReport", "description": "Reports of civic issues." },
+    "bloodRequests": { "schema": "BloodRequest", "description": "Emergency blood requests." },
+    "animalCases": { "schema": "AnimalCase", "description": "Animal rescue and adoption cases." },
+    "courses": { "schema": "Course", "description": "Educational courses." }
+  }
+}

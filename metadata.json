@@ -1,0 +1,9 @@
+{
+  "name": "SEWA - Social Welfare Ecosystem",
+  "description": "A Bauhaus-inspired platform connecting NGOs, volunteers, and citizens for social welfare, civic reporting, animal rescue, and emergency blood donation.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
